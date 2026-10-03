@@ -1,3 +1,8 @@
 spring:
   application:
     name: backend
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/envmon}
+    username: ${DB_USERNAME:envmon}
+    password: ${DB_PASSWORD:envmon_dev}
