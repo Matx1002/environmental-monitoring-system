@@ -5,6 +5,8 @@
 #include <Adafruit_SGP41.h>
 #include <VOCGasIndexAlgorithm.h>
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 constexpr uint8_t kI2cSdaPin = 21;
 constexpr uint8_t kI2cSclPin = 22;
@@ -12,6 +14,9 @@ constexpr uint8_t kI2cSclPin = 22;
 constexpr uint32_t kI2cFrequencyHz = 100000;
 
 constexpr uint32_t kSerialBaudRate = 115200;
+constexpr uint32_t kSensorReadIntervalMs = 1000;
+constexpr uint32_t kSensorTaskStackSize = 4096;
+constexpr UBaseType_t kSensorTaskPriority = 1;
 
 constexpr uint8_t kBme280Address = 0x76;
 constexpr uint8_t kSgp41Address = 0x59;
@@ -25,11 +30,11 @@ Adafruit_SGP41 sgp;
 
 VOCGasIndexAlgorithm vocAlgorithm;
 
-uint32_t delayTime = 1000;
-
 void printValues();
 
 void sgp41Conditioning();
+
+void sensorReadTask(void*);
 
 void setup() {
 
@@ -50,11 +55,40 @@ void setup() {
 
     ESP_LOGI(kMainLogTag, "BME280 and SGP41 sensors initialized successfully");
 
+    const BaseType_t taskCreationResult = xTaskCreate(
+        sensorReadTask,
+        "sensor-read",
+        kSensorTaskStackSize,
+        nullptr,
+        kSensorTaskPriority,
+        nullptr
+    );
+
+    if (taskCreationResult != pdPASS) {
+        ESP_LOGE(kMainLogTag, "Could not create sensor read task");
+        while (1) {
+            delay(1000);
+        }
+    }
+
+    ESP_LOGI(kMainLogTag, "Sensor read task started");
+
 }
 
 void loop() {
-    printValues();
-    delay(delayTime);
+    delay(1000);
+}
+
+void sensorReadTask(void*) {
+    TickType_t lastWakeTime = xTaskGetTickCount();
+
+    while (true) {
+        printValues();
+        vTaskDelayUntil(
+            &lastWakeTime,
+            pdMS_TO_TICKS(kSensorReadIntervalMs)
+        );
+    }
 }
 
 void sgp41Conditioning() {
