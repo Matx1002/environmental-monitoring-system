@@ -17,6 +17,7 @@ constexpr uint32_t kSerialBaudRate = 115200;
 constexpr uint32_t kSensorReadIntervalMs = 1000;
 constexpr uint32_t kSensorTaskStackSize = 4096;
 constexpr UBaseType_t kSensorTaskPriority = 1;
+constexpr uint32_t kSgp41ConditioningDurationSeconds = 10;
 
 constexpr uint8_t kBme280Address = 0x76;
 constexpr uint8_t kSgp41Address = 0x59;
@@ -100,13 +101,10 @@ void sgp41Conditioning() {
     uint16_t sraw_nox = 0;
     int32_t vocIndex = 0;
 
-    uint32_t conditioningTime = 60; // seconds
-
     ESP_LOGI(kSgp41LogTag, "Conditioning (%lu seconds)...",
-             static_cast<unsigned long>(conditioningTime));
+             static_cast<unsigned long>(kSgp41ConditioningDurationSeconds));
 
-
-    for (int i = 0; i < 60; i++) {
+    for (uint32_t i = 0; i < kSgp41ConditioningDurationSeconds; ++i) {
         temperature = bme.readTemperature();
         humidity = bme.readHumidity();
         pressure = bme.readPressure() / 100.0F;
