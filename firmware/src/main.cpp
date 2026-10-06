@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <SPI.h>
+#include <cinttypes>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_SGP41.h>
@@ -101,8 +102,8 @@ void sgp41Conditioning() {
     uint16_t sraw_nox = 0;
     int32_t vocIndex = 0;
 
-    ESP_LOGI(kSgp41LogTag, "Conditioning (%lu seconds)...",
-             static_cast<unsigned long>(kSgp41ConditioningDurationSeconds));
+    ESP_LOGI(kSgp41LogTag, "Conditioning (%" PRIu32 " seconds)...",
+             kSgp41ConditioningDurationSeconds);
 
     for (uint32_t i = 0; i < kSgp41ConditioningDurationSeconds; ++i) {
         temperature = bme.readTemperature();
@@ -114,9 +115,9 @@ void sgp41Conditioning() {
 
             ESP_LOGI(kSgp41LogTag,
                      "Temperature: %.2f C, pressure: %.2f hPa, humidity: %.2f %%, "
-                     "raw VOC: %u, VOC index: %ld",
+                     "raw VOC: %u, VOC index: %" PRId32,
                      temperature, pressure, humidity, sraw_voc,
-                     static_cast<long>(vocIndex));
+                     vocIndex);
 
         } else {
             ESP_LOGE(kSgp41LogTag, "Error conditioning SGP41 sensor");
@@ -148,7 +149,7 @@ void printValues() {
 
     ESP_LOGI(kSgp41LogTag,
              "Temperature: %.2f C, pressure: %.2f hPa, humidity: %.2f %%, "
-             "raw VOC: %u, VOC index: %ld",
+             "raw VOC: %u, VOC index: %" PRId32,
              temperature, pressure, humidity, sraw_voc,
-             static_cast<long>(vocIndex));
+             vocIndex);
 }
